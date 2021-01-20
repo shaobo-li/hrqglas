@@ -1,0 +1,3 @@
+useDynLib(hrqglas, .registration=TRUE)
+export("Rcpp.fake.fun")
+importFrom(Rcpp, evalCpp)
