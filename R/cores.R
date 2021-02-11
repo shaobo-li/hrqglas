@@ -1,7 +1,7 @@
 
 #' Core function for updating beta
 #'
-#' @param x Design matrix
+#' @param x Design matrix (in matrix format)
 #' @param y Response variable
 #' @param tau Percentile
 #' @param gamma Huber parameter
@@ -22,7 +22,7 @@
 #' \item{iter}{number of iteration}
 #' \item{grad}{gradient vector}
 #' 
-#' @export
+#' @noRd
 solvebeta<- function(x, y, tau, gamma, weights, group.index, lambdaj, w.lambda, eigenval, beta.ini, max_iter, apprx, epsilon=1e-4){
   
   x<- as.matrix(x)

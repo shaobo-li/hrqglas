@@ -1,11 +1,11 @@
 Package: hrqglas
 Type: Package
-Title: What the Package Does in One 'Title Case' Line
+Title: Group variable selection for quantile and robust mean regression
 Version: 1.0
 Date: 2021-01-19
 Author: Ben Sherwood and Shaobo Li
 Maintainer: Shaobo Li <shaobo.li@ku.edu>
-Description: One paragraph description of what the package does as one or more full sentences.
+Description: This package provide program to conduct variable selection for quantile and robust mean regression \citep{sherwood2021}. The group lasso penalty \citep{yuan2006model}. The Huber loss is adopted so that the quantile check function can be approximated by the tilted Huber loss for computational efficiency and stability.
 License: GPL (>= 2)
 Imports: Rcpp (>= 1.0.4), MASS, Matrix
 LinkingTo: Rcpp
