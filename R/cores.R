@@ -1,5 +1,5 @@
 
-#' Core function for updating beta
+#' Core function for updating beta (this file has been implemented using C, so it is no longer used.)
 #'
 #' @param x Design matrix (in matrix format)
 #' @param y Response variable

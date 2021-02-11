@@ -17,11 +17,9 @@ hrq_glasso(
   apprx = "huber",
   lambda.discard = TRUE,
   method = "quantile",
-  usec = TRUE,
   scalex = TRUE,
   epsilon = 1e-04,
-  beta0 = NULL,
-  red_iter = T
+  beta0 = NULL
 )
 }
 \arguments{
@@ -49,15 +47,11 @@ hrq_glasso(
 
 \item{method}{Choice for mean or quantile regression. Default is \code{quantile}.}
 
-\item{usec}{If use C.}
-
 \item{scalex}{Standardize design matrix. Default is TRUE.}
 
 \item{epsilon}{The epsilon level convergence. Default is 1e-4.}
 
 \item{beta0}{Initial estimates. Default is NULL.}
-
-\item{red_iter}{If reduce the number of iteration if solution is nonsparse in order to boost the speed. Default is TRUE.}
 }
 \value{
 It returns a sequence of estimated coefficients for quantile regression with group feature selection corresponding to a sequence of lambda. 

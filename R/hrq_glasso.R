@@ -32,11 +32,9 @@
 #' @param apprx Approximation method. Default is \code{huber}. The other option is \code{tanh} which uses the hypertangent function to approximate the first order derivative of absolute loss. 
 #' @param lambda.discard Default is TRUE, meaning that the solution path stops if the relative deviance changes sufficiently small. It usually happens near the end of solution path. However, the program returns at least 70 models along the solution path. 
 #' @param method Choice for mean or quantile regression. Default is \code{quantile}.
-#' @param usec If use C.
 #' @param scalex Standardize design matrix. Default is TRUE.
 #' @param epsilon The epsilon level convergence. Default is 1e-4.
 #' @param beta0 Initial estimates. Default is NULL.
-#' @param red_iter If reduce the number of iteration if solution is nonsparse in order to boost the speed. Default is TRUE.
 #'
 #' @return It returns a sequence of estimated coefficients for quantile regression with group feature selection corresponding to a sequence of lambda. 
 #' The estimated coefficients are in the sparse matrix format. Returned values also include the sequence of lambda, the null deviance, 
@@ -62,7 +60,7 @@
 #' fit$beta[,8]
 #' 
 hrq_glasso<- function(x, y, group.index, lambda=NULL, weights=NULL, w.lambda=NULL, tau=0.5, gamma=0.2, max_iter=200, apprx="huber", 
-                      lambda.discard=TRUE, method="quantile", usec=TRUE, scalex=TRUE, epsilon=1e-4, beta0=NULL, red_iter=T){
+                      lambda.discard=TRUE, method="quantile", scalex=TRUE, epsilon=1e-4, beta0=NULL){
   
   if(scalex){
     x <- scale(x)
@@ -95,9 +93,6 @@ hrq_glasso<- function(x, y, group.index, lambda=NULL, weights=NULL, w.lambda=NUL
       r<- y-b.int
       # null devience
       dev0<- sum(rq.loss(r,tau))
-      #gamma<- min(gamma0, quantile(abs(r), probs = 0.1))  # 10% rule
-      #gamma<- sort(abs(r))[10]  # 10 obs rule
-      #gamma<- max(gamma0, sort(abs(r))[10])
       gamma.max<- 0.8; gamma<- min(gamma.max, max(gamma0, quantile(abs(r), probs = 0.1)))
     } else if(method == "huber"){
       b.int <- coefficients(rlm(y ~ 1, k2=gamma))[1] # gamma stays fixed for huber regression
@@ -111,9 +106,6 @@ hrq_glasso<- function(x, y, group.index, lambda=NULL, weights=NULL, w.lambda=NUL
     r <- y - beta0[1] - x%*%beta0[-1]
     if(method=="quantile"){
       dev0<- sum(rq.loss(r,tau))
-      #gamma<- min(gamma0, quantile(abs(r), probs = 0.1))  # 10% rule
-      #gamma<- sort(abs(r))[10]  # 10 obs rule
-      #gamma<- max(gamma0, sort(abs(r))[10])
       gamma.max<- 0.8; gamma<- min(gamma.max, max(gamma0, quantile(abs(r), probs = 0.1)))
     }else if(method == "huber"){
       dev0 <- sum(huber.loss(r,gamma))
@@ -123,13 +115,11 @@ hrq_glasso<- function(x, y, group.index, lambda=NULL, weights=NULL, w.lambda=NUL
   }
   r0<- r
   
-  
-  if(usec){
-    group_order <- order(group.index)
-    group.index <- sort(group.index)
-    x <- x[,group_order]
-    beta_order <- c(1,group_order+1)
-  }
+  ## required by C code ##
+  group_order <- order(group.index)
+  group.index <- sort(group.index)
+  x <- x[,group_order]
+  beta_order <- c(1,group_order+1)
   
   
   ## get sequence of lambda if not supplied
@@ -170,39 +160,23 @@ hrq_glasso<- function(x, y, group.index, lambda=NULL, weights=NULL, w.lambda=NUL
     eigen.sub.H[k]<- max(eigen(sub.H)$value)+1e-6
   }
   
-  
-  
   ### for loop over lambda's
   if(length(lambda)==2){
     lambda<- lambda[2]
     # update beta and residuals
-    if(usec){
-      update <- .C("solve_beta", as.double(y), as.double(cbind(1,x)), as.double(tau), as.double(gamma), 
-                   as.double(weights), as.double(lambda), as.double(w.lambda), 
-                   as.double(eigen.sub.H), as.double(beta0), as.integer(max_iter), as.double(epsilon), as.integer(apprx=="huber"), 
-                   as.integer(n), as.integer(p), as.integer(ng), as.integer(nng), as.integer(0), as.double(r0), as.integer(0))
-      beta0<- update[[9]]
-      iter_num <- update[[19]]
-      converge_status <- update[[17]]==1
-      update.r <- update[[18]]
-      
-      #return(list(beta=beta0, lambda=lambda, converge=update[[18]]==1, iter=update[[20]]))
-    } else{
-      update<- solvebeta(x, y, tau, gamma=gamma, weights, group.index, lambda, w.lambda, 
-                         eigen.sub.H, beta.ini=beta0, max_iter, apprx=apprx, epsilon=epsilon)
-      beta0<- update$beta.update
-      iter_num <- update$iter
-      converge_status <- update$converge
-      update.r <- update$r
-      
-      #return(list(beta=beta0, lambda=lambda, converge=update$converge, iter=update$iter))
-    }
+    update <- .C("solve_beta", as.double(y), as.double(cbind(1,x)), as.double(tau), as.double(gamma), 
+                 as.double(weights), as.double(lambda), as.double(w.lambda), 
+                 as.double(eigen.sub.H), as.double(beta0), as.integer(max_iter), as.double(epsilon), as.integer(apprx=="huber"), 
+                 as.integer(n), as.integer(p), as.integer(ng), as.integer(nng), as.integer(0), as.double(r0), as.integer(0))
+    beta0<- update[[9]]
+    iter_num <- update[[19]]
+    converge_status <- update[[17]]==1
+    update.r <- update[[18]]
+    
     if(scalex){
       beta0 <- transform_coefs(beta0, mu_x, sigma_x)
     }
-    if(usec){
-      beta0[beta_order] <- beta0
-    }
+    beta0[beta_order] <- beta0
     
     if(method=="quantile"){
       dev1<- sum(weights*rq.loss(update.r, tau))
@@ -233,8 +207,6 @@ hrq_glasso<- function(x, y, group.index, lambda=NULL, weights=NULL, w.lambda=NUL
     gamma.seq<- rep(0, length(lambda)); gamma.seq[1]<- gamma
     active.ind<- NULL
     for(j in 2:length(lambda)){ #
-      #ptc=proc.time()
-      #cat("lambda", j, '\n')
       
       if(length(active.ind)<ng){
         ## use strong rule to determine active group at (i+1) (pre-screening)
@@ -242,11 +214,9 @@ hrq_glasso<- function(x, y, group.index, lambda=NULL, weights=NULL, w.lambda=NUL
         grad_k.norm<- tapply(grad_k, group.index, l2norm)
         active.ind<- which(grad_k.norm>=w.lambda*(2*lambda[j]-lambda[j-1])) 
         n.active.ind<- length(active.ind)
-        #print(active.ind)
         
         if(length(active.ind)==0){
           inactive.ind<- 1:ng
-          #beta.all[,j]<- beta0
           outer_iter<- 0
           kkt_met<- NA
           update.iter<- 0
@@ -254,7 +224,7 @@ hrq_glasso<- function(x, y, group.index, lambda=NULL, weights=NULL, w.lambda=NUL
           update.r<- r0
           
         }else{
-          if(length(active.ind)>ng/2 & red_iter==TRUE) max_iter<- 50
+          if(length(active.ind)>ng/2) max_iter<- 50
           
           inactive.ind<- (1:ng)[-active.ind]
           
@@ -271,88 +241,54 @@ hrq_glasso<- function(x, y, group.index, lambda=NULL, weights=NULL, w.lambda=NUL
             u.reduced.group.index <- unique(reduced.group.index)
             reduced.ng<- length(u.reduced.group.index)
             x.sub<- x[,reduced.ind]
-            #Ben added this next line
             reduced.eigen <- eigen.sub.H[u.reduced.group.index]
             
             
             # update beta and residuals
-            if(usec){
-              x.sub.c <- cbind(1,x.sub)
-              residuals.c <- y - x.sub.c %*% beta0[c(1, reduced.ind+1)]
-              reduced.w.lambda <- w.lambda[u.reduced.group.index]
-              reduced.nng <- table(reduced.group.index)
-              update <- .C("solve_beta", as.double(y), as.double(x.sub.c), as.double(tau), as.double(gamma), 
-                           as.double(weights), as.double(lambda[j]), as.double(reduced.w.lambda), 
-                           as.double(reduced.eigen), as.double(beta0[c(1, reduced.ind+1)]), as.integer(max_iter), as.double(epsilon), as.integer(apprx=="huber"), 
-                           as.integer(n), as.integer(p), as.integer(reduced.ng), as.integer(reduced.nng), as.integer(0), as.double(residuals.c), as.integer(0))
-              
-              beta.update <- update[[9]]
-              update.r <- update[[18]]
-              update.converge <- update[[17]]
-              update.iter <- update[[19]]
-              
-            } else{
-              update<- solvebeta(x=x.sub, y=y, tau=tau, gamma=gamma, weights=weights, group.index=reduced.group.index, 
-                                 lambdaj=lambda[j], w.lambda=w.lambda, eigenval=eigen.sub.H, apprx=apprx,
-                                 beta.ini=beta0[c(1, reduced.ind+1)], max_iter=max_iter, epsilon=epsilon)
-              beta.update <- update$beta.update
-              update.r <- update$r
-              update.converge <- update$converge
-              update.iter <- update$iter
-              update.grad<- update$grad
-              
-            }
+            x.sub.c <- cbind(1,x.sub)
+            residuals.c <- y - x.sub.c %*% beta0[c(1, reduced.ind+1)]
+            reduced.w.lambda <- w.lambda[u.reduced.group.index]
+            reduced.nng <- table(reduced.group.index)
+            update <- .C("solve_beta", as.double(y), as.double(x.sub.c), as.double(tau), as.double(gamma), 
+                         as.double(weights), as.double(lambda[j]), as.double(reduced.w.lambda), 
+                         as.double(reduced.eigen), as.double(beta0[c(1, reduced.ind+1)]), as.integer(max_iter), as.double(epsilon), as.integer(apprx=="huber"), 
+                         as.integer(n), as.integer(p), as.integer(reduced.ng), as.integer(reduced.nng), as.integer(0), as.double(residuals.c), as.integer(0))
+            
+            beta.update <- update[[9]]
+            update.r <- update[[18]]
+            update.converge <- update[[17]]
+            update.iter <- update[[19]]
             
             beta0[c(1, reduced.ind+1)]<- beta.update
             
             ## check inactive set by KKT condition
             kkt_results <- kkt_check(r=update.r,weights=weights,w=w.lambda,gamma=gamma,tau=tau,group.index=group.index,
                                      inactive.ind=inactive.ind,lambda=lambda[j],x=x,n=n,apprx=apprx)
-            #print(kkt_results$new_groups)
             if(kkt_results$kkt==TRUE){
               kkt_met <- TRUE
-              #kkt_seq <- c(kkt_seq, TRUE)
             } else{
               active.ind <- c(active.ind, kkt_results$new_groups)
               inactive.ind<- (1:ng)[-active.ind]
               #break
             }
-            # if(kkt_met == FALSE && outer_iter > 10){
-            #   active.ind <- 1:ng
-            # }
           }
-          
         }
-        
       }
       else{ # nonsparse estimates, length(active_ind)=ng
         
         outer_iter<- 0
         kkt_met<- NA
-        if(red_iter==TRUE) max_iter<- 50
+        max_iter<- 50
         
         # update beta and residuals
-        if(usec){
-          update <- .C("solve_beta", as.double(y), as.double(cbind(1,x)), as.double(tau), as.double(gamma), 
-                       as.double(weights), as.double(lambda[j]), as.double(w.lambda), 
-                       as.double(eigen.sub.H), as.double(beta0), as.integer(max_iter), as.double(epsilon), as.integer(apprx=="huber"), 
-                       as.integer(n), as.integer(p), as.integer(ng), as.integer(nng), as.integer(0), as.double(r0), as.integer(0))
-          beta.update <- update[[9]]
-          update.r <- update[[18]]
-          update.converge <- update[[17]]
-          update.iter <- update[[19]]
-          
-        } else{
-          update<- solvebeta(x=x, y=y, tau=tau, gamma=gamma, weights=weights, group.index=group.index, 
-                             lambdaj=lambda[j], w.lambda=w.lambda, eigenval=eigen.sub.H, apprx=apprx,
-                             beta.ini=beta0, max_iter=max_iter, epsilon=epsilon)
-          beta.update <- update$beta.update
-          update.r <- update$r
-          update.converge <- update$converge
-          update.iter <- update$iter
-          update.grad<- update$grad
-          
-        }
+        update <- .C("solve_beta", as.double(y), as.double(cbind(1,x)), as.double(tau), as.double(gamma), 
+                     as.double(weights), as.double(lambda[j]), as.double(w.lambda), 
+                     as.double(eigen.sub.H), as.double(beta0), as.integer(max_iter), as.double(epsilon), as.integer(apprx=="huber"), 
+                     as.integer(n), as.integer(p), as.integer(ng), as.integer(nng), as.integer(0), as.double(r0), as.integer(0))
+        beta.update <- update[[9]]
+        update.r <- update[[18]]
+        update.converge <- update[[17]]
+        update.iter <- update[[19]]
         
         beta0<- beta.update
         
@@ -364,20 +300,13 @@ hrq_glasso<- function(x, y, group.index, lambda=NULL, weights=NULL, w.lambda=NUL
       iter[j]<- update.iter
       gamma.seq[j]<- gamma
       
+      beta0[beta_order] <- beta0  # required for C
       
-      if(usec){
-        beta0[beta_order] <- beta0
-      }		
       beta.all[,j]<- beta0
       r0<- update.r 
       if(method=="quantile"){
-        #gamma<- min(gamma0, quantile(abs(r0), prob=0.1))  # 10% rule
-        #gamma<- sort(abs(r0))[10]  # 10 obs rule
-        #gamma<- max(gamma0, sort(abs(r0))[10])
         gamma.max<- 0.8; gamma<- min(gamma.max, max(gamma0, quantile(abs(r0), probs = 0.1)))
       } 
-      
-      #print(c(outer_iter_count[j],kkt_seq[j]))
       
       # group index and number of groups
       grp.ind<- unique(group.index[beta0[-1]!=0])
@@ -395,8 +324,7 @@ hrq_glasso<- function(x, y, group.index, lambda=NULL, weights=NULL, w.lambda=NUL
       rel_dev[j]<- dev1/dev0
       rel_dev_change<- rel_dev[j]-rel_dev[j-1]
       if(abs(rel_dev_change)<1e-3 & j>70 & lambda.discard) break
-      
-      #print(proc.time()-ptc)
+
     } # end of for loop of lambda
     
     
