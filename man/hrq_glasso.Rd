@@ -66,8 +66,9 @@ values of penalized loss, and unpenalized loss across the sequence of lambda.
 \item{n.grp}{The number of selected groups for each lambda.}
 }
 \description{
-This function is an implementation of \cite{sherwood2021}. It conducts group-wise (with known groups) variable selection for quantile and robust mean regression with the group lasso penalty. 
-The Huber loss is adopted so that the quantile check function can be approximated by the tilted Huber loss for computational efficiency and stability.
+This function conducts group-wise (with known groups) variable selection for quantile and robust mean regression with the group lasso penalty. 
+The Huber loss is used for both types of regression model, where the quantile check function is approximated by Huber loss. A full solution path
+is generated unless a single value of the shrinkage parameter is specified.
 }
 \examples{
 n<- 100
@@ -79,4 +80,10 @@ group<- rep(1:p, each=3)
 fit<- hrq_glasso(X, y, group)
 fit$beta[,8]
 
+}
+\references{
+Sherwood, B., and Li, S. (2021) An Efficient Approach to Feature Selection and Estimation for Quantile Regression with Grouped Variables. \emph{Working paper}.
+
+Yang, Y., and Zou, H., (2015) A Fast Unified Algorithm for Solving Group-lasso Penalize Learning Problems, \emph{Statistics and Computing}, 25 1129-1141.
+\url{https://doi.org/10.1007/s11222-014-9498-5}.
 }

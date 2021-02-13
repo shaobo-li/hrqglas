@@ -3,14 +3,12 @@
 ## plot
 
 #' Generating plots for cross-validation
-#' @import graphics
 #' @param x The object of function \code{cv.hrq_glasso}.
 #' @param ... other input parameters for the generic function \code{plot}.
-#'
+#' @importFrom graphics axis arrows abline
 #' @return Cross-validation plot for the entire solution path.
 #' @export
 #'
-#' @examples
 plot.cv.hrq_glasso<- function(x, ...){
   cv.fit<- x
   lambda<- cv.fit$lambda

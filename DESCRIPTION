@@ -3,10 +3,20 @@ Type: Package
 Title: Group variable selection for quantile and robust mean regression
 Version: 1.0
 Date: 2021-01-19
-Author: Ben Sherwood and Shaobo Li
+Authors@R: 
+  c(person("Shaobo", "Li", email="shaobo.li@ku.edu", role=c("aut", "cre")),
+    person("Ben", "Sherwood", email="ben.sherwood@ku.edu", role=c("aut")))
 Maintainer: Shaobo Li <shaobo.li@ku.edu>
-Description: This package provide program to conduct variable selection for quantile and robust mean regression \citep{sherwood2021}. The group lasso penalty \citep{yuan2006model}. The Huber loss is adopted so that the quantile check function can be approximated by the tilted Huber loss for computational efficiency and stability.
+Description: This package provides a program to conduct group variable selection for quantile and robust mean 
+              regression (Sherwood and Li, 2021). The group lasso penalty (Yuan and Lin, 2006) is used for
+              group-wise variable selection. Both of the quantile and mean regression models are based on the Huber loss.
+              Specifically, with the tuning parameter in the Huber loss approaching to 0, the quantile check 
+              function can be approximated by the Huber loss for the median and the tilted version of 
+              Huber loss at other quantiles. Such approximation provides computational efficiency and stability, and
+              has also been shown to be statistical consistent.
+URL: GitHub: https://github.com/shaobo-li/hrqglas
 License: GPL (>= 2)
-Imports: Rcpp (>= 1.0.4), MASS, Matrix
+Imports: Rcpp (>= 1.0.4), stats, MASS, Matrix, graphics
 LinkingTo: Rcpp
 RoxygenNote: 7.1.1
+Encoding: UTF-8

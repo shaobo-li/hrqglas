@@ -13,11 +13,12 @@
 
 #' Robust group variable selection for quantile and mean regression
 #' 
-#' This function is an implementation of \cite{sherwood2021}. It conducts group-wise (with known groups) variable selection for quantile and robust mean regression with the group lasso penalty. 
-#' The Huber loss is adopted so that the quantile check function can be approximated by the tilted Huber loss for computational efficiency and stability.
-#' 
-#' @import stats MASS Matrix
-#' 
+#' This function conducts group-wise (with known groups) variable selection for quantile and robust mean regression with the group lasso penalty. 
+#' The Huber loss is used for both types of regression model, where the quantile check function is approximated by Huber loss. A full solution path
+#' is generated unless a single value of the shrinkage parameter is specified.
+#' @importFrom Matrix Matrix
+#' @importFrom stats sd quantile coefficients
+#' @importFrom MASS rlm 
 #' @useDynLib hrqglas solve_beta
 #' 
 #' @param x Design matrix (in matrix format)
@@ -46,6 +47,12 @@
 #' \item{loss}{The value of unpenalized loss for each lambda.}
 #' \item{index.grp}{Group indices that correspond to the estimated coefficient matrix \code{beta}.}
 #' \item{n.grp}{The number of selected groups for each lambda.}
+#' 
+#' @references
+#' Sherwood, B., and Li, S. (2021) An Efficient Approach to Feature Selection and Estimation for Quantile Regression with Grouped Variables. \emph{Working paper}.
+#' 
+#' Yang, Y., and Zou, H., (2015) A Fast Unified Algorithm for Solving Group-lasso Penalize Learning Problems, \emph{Statistics and Computing}, 25 1129-1141.
+#' \url{https://doi.org/10.1007/s11222-014-9498-5}.
 #' 
 #' @export
 #'
