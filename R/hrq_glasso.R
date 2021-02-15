@@ -158,7 +158,7 @@ hrq_glasso<- function(x, y, group.index, lambda=NULL, weights=NULL, w.lambda=NUL
   }
   
   ## QM condition in Yang and Zou, Lemma 1 (2) -- PD matrix H
-  H<- t(x)%*%diag(weights)%*%x/(n*gamma)	
+  H<- 2*t(x)%*%diag(weights)%*%x/(n*gamma)	
   # get eigen values of sub matrices for each group
   eigen.sub.H<- rep(0, ng)
   for(k in 1:ng){
