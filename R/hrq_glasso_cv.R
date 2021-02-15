@@ -5,7 +5,8 @@
 
 #' Cross-validation for quantile regression with group lasso
 #' 
-#' K fold cross-validation is conducted. Three types of loss (squared error (\code{se}), quantile loss (\code{rq}) and huber loss (\code{he})) 
+#' K fold cross-validation is conducted. Four types of loss (squared error (\code{se}), absolute error (\code{ae})
+#' quantile check loss (\code{check}) and huber loss (\code{he})) 
 #' can be specified as the CV criterion. 
 #'
 #' @param hrq_glasso_obj Object of \code{hrq_glasso()}. The default is NULL so that hrq_glasso() is performed in this cross-validation. 
@@ -45,7 +46,7 @@
 #' group<- rep(1:p, each=3)
 #' fitcv<- cv.hrq_glasso(x=X, y=y, group.index=group, method="quantile")
 #' plot(fitcv)
-cv.hrq_glasso<- function(hrq_glasso_obj=NULL, k=5, loss="rq", x=NULL, y=NULL, tau=0.5, group.index=NULL, method=NULL, folds=NULL, gamma=0.2, apprx="huber", ...){
+cv.hrq_glasso<- function(hrq_glasso_obj=NULL, k=5, loss="check", x=NULL, y=NULL, tau=0.5, group.index=NULL, method=NULL, folds=NULL, gamma=0.2, apprx="huber", ...){
   
   ## two ways to call this function
   if(!is.null(hrq_glasso_obj)){
@@ -72,7 +73,7 @@ cv.hrq_glasso<- function(hrq_glasso_obj=NULL, k=5, loss="rq", x=NULL, y=NULL, ta
   
   nlambda<- length(lambda)
   
-  mse<- mqe<- mhe <- matrix(0, nlambda, k);
+  mse<- mae<- mqe<- mhe <- matrix(0, nlambda, k);
   for(i in 1:k){
     ind<- which(folds==i)
     train_x<- x[-ind,]
@@ -86,7 +87,11 @@ cv.hrq_glasso<- function(hrq_glasso_obj=NULL, k=5, loss="rq", x=NULL, y=NULL, ta
       se<- (test_y-pred)^2
       mse[,i]<- apply(se,2,mean)[1:nlambda]
     } 
-    if(loss == "rq"){
+    if(loss == "ae"){
+      ae<- abs(test_y-pred)
+      mae[,i]<- apply(ae,2,mean)[1:nlambda]
+    } 
+    if(loss == "check"){
       eq<- sapply(1:nlambda, function(xx) rq.loss((test_y-pred[,xx]), tau))
       mqe[,i]<- apply(eq,2,mean)[1:nlambda]
     } 
@@ -96,14 +101,15 @@ cv.hrq_glasso<- function(hrq_glasso_obj=NULL, k=5, loss="rq", x=NULL, y=NULL, ta
     } 
   }
   cv.mse<- apply(mse, 1, mean)
+  cv.mae<- apply(mae, 1, mean)
   cv.mqe<- apply(mqe, 1, mean)
   cv.mhe<- apply(mhe, 1, mean)
   cv.mse.1se<- apply(mse, 1, sd)
+  cv.mae.1se<- apply(mae, 1, sd)
   cv.mqe.1se<- apply(mqe, 1, sd)
   cv.mhe.1se<- apply(mhe, 1, sd)
   
-  #cv<- data.frame(lambda=lambda, cv.mse, cv.mqe, cv.mse.1se, cv.mqe.1se)
-  if(loss == "rq"){
+  if(loss == "check"){
     cv.ind.min<- which(cv.mqe==min(cv.mqe))
     cv.ind.1se<- which(cv.mqe<=min(cv.mqe)+cv.mqe.1se[cv.ind.min])
     lambda.1se<- max(lambda[cv.ind.1se])
@@ -123,17 +129,28 @@ cv.hrq_glasso<- function(hrq_glasso_obj=NULL, k=5, loss="rq", x=NULL, y=NULL, ta
       class(output) <- "cv.hrq_glasso"
       return(output)
     }else{
-      if(loss == "he"){
-        cv.ind.min<- which(cv.mhe==min(cv.mhe))
-        cv.ind.1se<- which(cv.mhe<=min(cv.mhe)+cv.mhe.1se[cv.ind.min])
+      if(loss=="ae"){
+        cv.ind.min<- which(cv.mae==min(cv.mae))
+        cv.ind.1se<- which(cv.mae<=min(cv.mae)+cv.mae.1se[cv.ind.min])
         lambda.1se<- max(lambda[cv.ind.1se])
         output<- list(beta=fullmodel$beta, lambda=lambda, lambda.min=lambda[cv.ind.min], lambda.1se=lambda.1se, 
-                      cv.all=cv.mhe, folds=folds, cv.min= cv.mhe[cv.ind.min], cv.1se=cv.mhe[which(lambda==lambda.1se)], 
-                      cvup=cv.mhe+cv.mhe.1se, cvlo=cv.mhe-cv.mhe.1se, n.grp=fullmodel$n.grp)
+                      cv.all= cv.mae, folds=folds, cv.min=cv.mae[cv.ind.min], cv.1se=cv.mae[which(lambda==lambda.1se)], 
+                      cvup=cv.mae+cv.mae.1se, cvlo=cv.mae-cv.mae.1se, n.grp=fullmodel$n.grp)
         class(output) <- "cv.hrq_glasso"
         return(output)
-      } else{
-        stop("'loss' is not supported! Supported loss functions are 'rq', 'se' and 'he'.")
+      }else{
+        if(loss == "he"){
+          cv.ind.min<- which(cv.mhe==min(cv.mhe))
+          cv.ind.1se<- which(cv.mhe<=min(cv.mhe)+cv.mhe.1se[cv.ind.min])
+          lambda.1se<- max(lambda[cv.ind.1se])
+          output<- list(beta=fullmodel$beta, lambda=lambda, lambda.min=lambda[cv.ind.min], lambda.1se=lambda.1se, 
+                        cv.all=cv.mhe, folds=folds, cv.min= cv.mhe[cv.ind.min], cv.1se=cv.mhe[which(lambda==lambda.1se)], 
+                        cvup=cv.mhe+cv.mhe.1se, cvlo=cv.mhe-cv.mhe.1se, n.grp=fullmodel$n.grp)
+          class(output) <- "cv.hrq_glasso"
+          return(output)
+        } else{
+          stop("'loss' is not supported! Supported loss functions are 'check', 'ae', 'se' and 'he'.")
+        }
       }
     }
   }

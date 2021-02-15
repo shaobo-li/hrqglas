@@ -101,12 +101,12 @@ hrq_glasso<- function(x, y, group.index, lambda=NULL, weights=NULL, w.lambda=NUL
       # null devience
       dev0<- sum(rq.loss(r,tau))
       gamma.max<- 0.8; gamma<- min(gamma.max, max(gamma0, quantile(abs(r), probs = 0.1)))
-    } else if(method == "huber"){
+    } else if(method == "mean"){
       b.int <- coefficients(rlm(y ~ 1, k2=gamma))[1] # gamma stays fixed for huber regression
       r <- y - b.int
       dev0 <- sum(huber.loss(r,gamma))
     } else{
-      stop("method must be quantile or huber")
+      stop("method must be 'quantile' or 'mean'. ")
     }
     beta0<- c(b.int, rep(0,p)) 
   } else{
@@ -114,10 +114,10 @@ hrq_glasso<- function(x, y, group.index, lambda=NULL, weights=NULL, w.lambda=NUL
     if(method=="quantile"){
       dev0<- sum(rq.loss(r,tau))
       gamma.max<- 0.8; gamma<- min(gamma.max, max(gamma0, quantile(abs(r), probs = 0.1)))
-    }else if(method == "huber"){
+    }else if(method == "mean"){
       dev0 <- sum(huber.loss(r,gamma))
     }else{
-      stop("method must be quantile or huber")
+      stop("method must be 'quantile' or 'mean'.")
     }
   }
   r0<- r
@@ -187,7 +187,7 @@ hrq_glasso<- function(x, y, group.index, lambda=NULL, weights=NULL, w.lambda=NUL
     
     if(method=="quantile"){
       dev1<- sum(weights*rq.loss(update.r, tau))
-    } else if( method == "huber"){
+    } else if( method == "mean"){
       dev1<- sum(weights*huber.loss(update.r,gamma))	
     }
     
@@ -323,7 +323,7 @@ hrq_glasso<- function(x, y, group.index, lambda=NULL, weights=NULL, w.lambda=NUL
       # alternative deviance
       if(method=="quantile"){
         dev1<- sum(weights*rq.loss(r0, tau))
-      } else if( method == "huber"){
+      } else if( method == "mean"){
         dev1<- sum(weights*huber.loss(r0,gamma))	
       }
       loss[j]<- dev1/n

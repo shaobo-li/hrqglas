@@ -7,7 +7,7 @@
 cv.hrq_glasso(
   hrq_glasso_obj = NULL,
   k = 5,
-  loss = "rq",
+  loss = "check",
   x = NULL,
   y = NULL,
   tau = 0.5,
@@ -60,7 +60,8 @@ as well as the optimal values in terms of min and 1se. Corresponding lambda valu
 \item{n.grp}{The number of selected groups for each lambda.}
 }
 \description{
-K fold cross-validation is conducted. Three types of loss (squared error (\code{se}), quantile loss (\code{rq}) and huber loss (\code{he})) 
+K fold cross-validation is conducted. Four types of loss (squared error (\code{se}), absolute error (\code{ae})
+quantile check loss (\code{check}) and huber loss (\code{he})) 
 can be specified as the CV criterion.
 }
 \examples{
