@@ -25,7 +25,7 @@ group<- rep(1:p, each=3)
 
 # quantile regression
 fit<- hrq_glasso(X, y, group, method="quantile", tau=0.3)
-fit.cv<- cv.hrq_glasso(fit, loss="rq")
+fit.cv<- cv.hrq_glasso(fit, loss="check")
 plot(fit.cv)
 
 # mean regression
