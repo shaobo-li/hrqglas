@@ -11,7 +11,7 @@
 #'
 #' @param hrq_glasso_obj Object of \code{hrq_glasso()}. The default is NULL so that hrq_glasso() is performed in this cross-validation. 
 #' @param k Number of folders.
-#' @param loss The loss function used for computing the cross-validation error. Supported losses include squared error (\code{se}), quantile loss (\code{rq}) and huber loss (\code{he}).
+#' @param loss The loss function used for computing the cross-validation error. Supported losses include squared error (\code{se}), absolute error (\code{ae}), quantile check loss (\code{check}) and huber loss (\code{he}).
 #' @param x Design matrix
 #' @param y Response variable
 #' @param tau Percentage

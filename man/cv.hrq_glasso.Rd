@@ -24,7 +24,7 @@ cv.hrq_glasso(
 
 \item{k}{Number of folders.}
 
-\item{loss}{The loss function used for computing the cross-validation error. Supported losses include squared error (\code{se}), quantile loss (\code{rq}) and huber loss (\code{he}).}
+\item{loss}{The loss function used for computing the cross-validation error. Supported losses include squared error (\code{se}), absolute error (\code{ae}), quantile check loss (\code{check}) and huber loss (\code{he}).}
 
 \item{x}{Design matrix}
 
