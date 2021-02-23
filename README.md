@@ -24,13 +24,13 @@ y<- -2+X[,1]+0.5*X[,2]-X[,3]-0.5*X[,7]+X[,8]-0.2*X[,9]+rt(n,2)
 group<- rep(1:p, each=3)
 
 # quantile regression
-fit<- hrq_glasso(X, y, group, method="quantile", tau=0.3)
-fit.cv<- cv.hrq_glasso(fit, loss="check")
+fit<- hrq_glasso(x=X, y=y, group.index=group, method="quantile", tau=0.3)
+fit.cv<- cv.hrq_glasso(x=X, y=y, group.index=group, method="quantile", tau=0.3, loss="check")
 plot(fit.cv)
 
 # mean regression
-fit1<- hrq_glasso(X, y, group, method="mean")
-fit.cv1<- cv.hrq_glasso(fit1, loss="se")
+fit1<- hrq_glasso(x=X, y=y, group.index=group, method="mean")
+fit.cv1<- cv.hrq_glasso(x=X, y=y, group.index=group, method="mean", loss="se")
 plot(fit.cv1)
 ```
 
