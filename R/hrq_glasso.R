@@ -193,8 +193,9 @@ hrq_glasso<- function(x, y, group.index, lambda=NULL, weights=NULL, w.lambda=NUL
     
     pen.loss<- dev1/n+lambda*sum(eigen.sub.H*sapply(1:ng, function(xx) l2norm(beta0[-1][group.index==xx])))
     group.index.out<- unique(group.index[beta0[-1]!=0])
-    output<- list(beta=beta0, lambda=lambda, converge=update$converge, iter=update$iter, rel_dev=dev1/dev0, 
-                  null.dev=dev0, obj=pen.loss, n.grp=length(group.index.out), index.grp=group.index.out)
+    output<- list(beta=beta0, lambda=lambda, null.dev=dev0, pen.loss=pen.loss, loss=dev1/n, tau=tau, 
+                  apprx=apprx, n.grp=length(group.index.out), index.grp=group.index.out, x=x, y=y)
+    output.hide<- list(converge=update$converge, iter=update$iter, rel_dev=dev1/dev0)
     class(output)<- "hrq_glasso"
     return(output)
     

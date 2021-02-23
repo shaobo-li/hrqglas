@@ -9,17 +9,15 @@
 #' quantile check loss (\code{check}) and huber loss (\code{he})) 
 #' can be specified as the CV criterion. 
 #'
-#' @param hrq_glasso_obj Object of \code{hrq_glasso()}. The default is NULL so that hrq_glasso() is performed in this cross-validation. 
-#' @param k Number of folders.
-#' @param loss The loss function used for computing the cross-validation error. Supported losses include squared error (\code{se}), absolute error (\code{ae}), quantile check loss (\code{check}) and huber loss (\code{he}).
 #' @param x Design matrix
 #' @param y Response variable
 #' @param tau Percentage
 #' @param group.index A vector of group index, e.g., (1,1,1,2,2,2,3,3) 
+#' @param k Number of folders.
+#' @param loss The loss function used for computing the cross-validation error. Supported losses include squared error (\code{se}), absolute error (\code{ae}), quantile check loss (\code{check}) and huber loss (\code{he}).
 #' @param method Choice for mean or quantile regression. Default is \code{quantile}.
-#' @param folds A vector of folder index for all observations.
+#' @param folds A vector of folder index for all observations. The procedure random splits if this argument is not specified.
 #' @param gamma Huber parameter 
-#' @param apprx Approximation method. Default is \code{huber}. The other option is \code{tanh} which uses the hypertangent function to approximate the first order derivative of absolute loss. 
 #' @param ... Other inputs of function \code{hrq_glasso()}.
 #'
 #' @return The full solution path is returned. It also returns the vector of CV score 
@@ -46,23 +44,10 @@
 #' group<- rep(1:p, each=3)
 #' fitcv<- cv.hrq_glasso(x=X, y=y, group.index=group, method="quantile")
 #' plot(fitcv)
-cv.hrq_glasso<- function(hrq_glasso_obj=NULL, k=5, loss="check", x=NULL, y=NULL, tau=0.5, group.index=NULL, method=NULL, folds=NULL, gamma=0.2, apprx="huber", ...){
+cv.hrq_glasso<- function(x, y, tau=0.5, group.index=NULL, k=5, loss="check", method="quantile", folds=NULL, gamma=0.2, ...){
   
-  ## two ways to call this function
-  if(!is.null(hrq_glasso_obj)){
-    y<- hrq_glasso_obj$y
-    x<- hrq_glasso_obj$x
-    group.index<- hrq_glasso_obj$group.index
-    tau<- hrq_glasso_obj$tau
-    method<- hrq_glasso_obj$method
-    apprx<- hrq_glasso_obj$apprx
-    lambda<- hrq_glasso_obj$lambda
-    #gamma<- hrq_glasso_obj$gamma
-    fullmodel<- hrq_glasso_obj
-  }else{
-    fullmodel<- hrq_glasso(x=x, y=y, group.index=group.index, ...)
-    lambda<- fullmodel$lambda
-  }
+  fullmodel<- hrq_glasso(x=x, y=y, group.index=group.index, ...)
+  lambda<- fullmodel$lambda
   
   n <- length(y)
   if(is.null(folds)){

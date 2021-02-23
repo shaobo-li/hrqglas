@@ -52,5 +52,33 @@ predict.hrq_glasso<- function(object, newX, s=NULL, ...){
   
   return(pred)
 }
+##########################################
+
+
+#' Prediction for cv.hrq_glasso object
+#'
+#' @param object The model object of \code{cv.hrq_glasso}.
+#' @param newX New design matrix.
+#' @param s Value of lambda. If missing, the default is the \code{lambda.min}.
+#' @param ... other input parameters.
+#'
+#' @return The function returns predicted values based on the fitted model from \code{cv.hrq_glasso}.
+#' @export
+#'
+predict.cv.hrq_glasso<- function(object, newX, s, ...){
+  lambda<- object$lambda
+  if(missing(s)) s<- "lambda.min"
+  if(s == "lambda.min") s<- object$lambda.min
+  if(s == "lambda.1se") s<- object$lambda.1se
+  ind<- which.min(abs(s-lambda))[1]
+  beta<- as.vector(object$beta[,ind])
+  if(length(beta)==ncol(newX)+1){
+    pred<- as.matrix(cbind(1,newX))%*%beta
+  }else{
+    stop("new X has wrong dimension!")
+  }
+  
+  return(pred)
+}
 
 

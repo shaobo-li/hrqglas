@@ -5,27 +5,19 @@
 \title{Cross-validation for quantile regression with group lasso}
 \usage{
 cv.hrq_glasso(
-  hrq_glasso_obj = NULL,
-  k = 5,
-  loss = "check",
-  x = NULL,
-  y = NULL,
+  x,
+  y,
   tau = 0.5,
   group.index = NULL,
-  method = NULL,
+  k = 5,
+  loss = "check",
+  method = "quantile",
   folds = NULL,
   gamma = 0.2,
-  apprx = "huber",
   ...
 )
 }
 \arguments{
-\item{hrq_glasso_obj}{Object of \code{hrq_glasso()}. The default is NULL so that hrq_glasso() is performed in this cross-validation.}
-
-\item{k}{Number of folders.}
-
-\item{loss}{The loss function used for computing the cross-validation error. Supported losses include squared error (\code{se}), absolute error (\code{ae}), quantile check loss (\code{check}) and huber loss (\code{he}).}
-
 \item{x}{Design matrix}
 
 \item{y}{Response variable}
@@ -34,13 +26,15 @@ cv.hrq_glasso(
 
 \item{group.index}{A vector of group index, e.g., (1,1,1,2,2,2,3,3)}
 
+\item{k}{Number of folders.}
+
+\item{loss}{The loss function used for computing the cross-validation error. Supported losses include squared error (\code{se}), absolute error (\code{ae}), quantile check loss (\code{check}) and huber loss (\code{he}).}
+
 \item{method}{Choice for mean or quantile regression. Default is \code{quantile}.}
 
-\item{folds}{A vector of folder index for all observations.}
+\item{folds}{A vector of folder index for all observations. The procedure random splits if this argument is not specified.}
 
 \item{gamma}{Huber parameter}
-
-\item{apprx}{Approximation method. Default is \code{huber}. The other option is \code{tanh} which uses the hypertangent function to approximate the first order derivative of absolute loss.}
 
 \item{...}{Other inputs of function \code{hrq_glasso()}.}
 }
