@@ -8,10 +8,10 @@ hrq_glasso(
   x,
   y,
   group.index,
+  tau = 0.5,
   lambda = NULL,
   weights = NULL,
   w.lambda = NULL,
-  tau = 0.5,
   gamma = 0.2,
   max_iter = 200,
   apprx = "huber",
@@ -29,13 +29,13 @@ hrq_glasso(
 
 \item{group.index}{A vector of group index, e.g., (1,1,1,2,2,2,3,3)}
 
+\item{tau}{Percentile}
+
 \item{lambda}{Shrinkage parameter, default is NULL so that the algorithm chooses a sequence.}
 
 \item{weights}{Observation weights, default is NULL}
 
 \item{w.lambda}{Weights for Shrinkage parameter of each group, default is NULL}
-
-\item{tau}{Percentile}
 
 \item{gamma}{Huber parameter. An initial value is 0.2, while the algorithm adaptively tunes the value in each iteration.}
 

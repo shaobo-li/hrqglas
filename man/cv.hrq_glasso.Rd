@@ -7,13 +7,12 @@
 cv.hrq_glasso(
   x,
   y,
+  group.index,
   tau = 0.5,
-  group.index = NULL,
   k = 5,
   loss = "check",
   method = "quantile",
   folds = NULL,
-  gamma = 0.2,
   ...
 )
 }
@@ -22,9 +21,9 @@ cv.hrq_glasso(
 
 \item{y}{Response variable}
 
-\item{tau}{Percentage}
-
 \item{group.index}{A vector of group index, e.g., (1,1,1,2,2,2,3,3)}
+
+\item{tau}{Percentage}
 
 \item{k}{Number of folders.}
 
@@ -33,8 +32,6 @@ cv.hrq_glasso(
 \item{method}{Choice for mean or quantile regression. Default is \code{quantile}.}
 
 \item{folds}{A vector of folder index for all observations. The procedure random splits if this argument is not specified.}
-
-\item{gamma}{Huber parameter}
 
 \item{...}{Other inputs of function \code{hrq_glasso()}.}
 }

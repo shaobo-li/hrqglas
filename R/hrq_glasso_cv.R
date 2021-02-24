@@ -11,13 +11,12 @@
 #'
 #' @param x Design matrix
 #' @param y Response variable
-#' @param tau Percentage
 #' @param group.index A vector of group index, e.g., (1,1,1,2,2,2,3,3) 
+#' @param tau Percentage
 #' @param k Number of folders.
 #' @param loss The loss function used for computing the cross-validation error. Supported losses include squared error (\code{se}), absolute error (\code{ae}), quantile check loss (\code{check}) and huber loss (\code{he}).
 #' @param method Choice for mean or quantile regression. Default is \code{quantile}.
 #' @param folds A vector of folder index for all observations. The procedure random splits if this argument is not specified.
-#' @param gamma Huber parameter 
 #' @param ... Other inputs of function \code{hrq_glasso()}.
 #'
 #' @return The full solution path is returned. It also returns the vector of CV score 
@@ -44,9 +43,9 @@
 #' group<- rep(1:p, each=3)
 #' fitcv<- cv.hrq_glasso(x=X, y=y, group.index=group, method="quantile")
 #' plot(fitcv)
-cv.hrq_glasso<- function(x, y, tau=0.5, group.index=NULL, k=5, loss="check", method="quantile", folds=NULL, gamma=0.2, ...){
+cv.hrq_glasso<- function(x, y, group.index, tau=0.5, k=5, loss="check", method="quantile", folds=NULL, ...){
   
-  fullmodel<- hrq_glasso(x=x, y=y, group.index=group.index, ...)
+  fullmodel<- hrq_glasso(x=x, y=y, group.index=group.index, tau=tau, method=method, ...)
   lambda<- fullmodel$lambda
   
   n <- length(y)
@@ -66,7 +65,7 @@ cv.hrq_glasso<- function(x, y, tau=0.5, group.index=NULL, k=5, loss="check", met
     test_x<- x[ind,]
     test_y<- y[ind]
     
-    train_model<- hrq_glasso(x=train_x, y=train_y, group.index=group.index, lambda=lambda, lambda.discard=FALSE,...)
+    train_model<- hrq_glasso(x=train_x, y=train_y, group.index=group.index, tau=tau, method=method, lambda=lambda, lambda.discard=FALSE,...)
     pred<- predict.hrq_glasso(train_model, newX = test_x)
     if(loss == "se"){
       se<- (test_y-pred)^2

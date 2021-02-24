@@ -24,10 +24,10 @@
 #' @param x Design matrix (in matrix format)
 #' @param y Response variable
 #' @param group.index A vector of group index, e.g., (1,1,1,2,2,2,3,3) 
+#' @param tau Percentile
 #' @param lambda Shrinkage parameter, default is NULL so that the algorithm chooses a sequence.
 #' @param weights Observation weights, default is NULL
 #' @param w.lambda Weights for Shrinkage parameter of each group, default is NULL
-#' @param tau Percentile
 #' @param gamma Huber parameter. An initial value is 0.2, while the algorithm adaptively tunes the value in each iteration.
 #' @param max_iter Maximum number of iteration
 #' @param apprx Approximation method. Default is \code{huber}. The other option is \code{tanh} which uses the hypertangent function to approximate the first order derivative of absolute loss. 
@@ -66,7 +66,7 @@
 #' fit<- hrq_glasso(X, y, group)
 #' fit$beta[,8]
 #' 
-hrq_glasso<- function(x, y, group.index, lambda=NULL, weights=NULL, w.lambda=NULL, tau=0.5, gamma=0.2, max_iter=200, apprx="huber", 
+hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.lambda=NULL, gamma=0.2, max_iter=200, apprx="huber", 
                       lambda.discard=TRUE, method="quantile", scalex=TRUE, epsilon=1e-4, beta0=NULL){
   
   if(scalex){
