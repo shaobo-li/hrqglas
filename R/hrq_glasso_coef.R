@@ -30,11 +30,15 @@ coef.cv.hrq_glasso<- function(object, s, ...){
 #' @export
 #'
 coef.hrq_glasso<- function(object, s, ...){
-  lambda<- object$lambda
-  ind<- which.min(abs(s-lambda))[1]
-  beta<- as.vector(object$beta[,ind])
-  names(beta)<- c("Intercept", paste("V", 1:(length(beta)-1), sep = ""))
-  return(beta)
+  if(missing(s)){
+    return(object$beta)
+  }else{
+    lambda<- object$lambda
+    ind<- which.min(abs(s-lambda))[1]
+    beta<- as.vector(object$beta[,ind])
+    names(beta)<- c("Intercept", paste("V", 1:(length(beta)-1), sep = ""))
+    return(beta)
+  }
 }
 
 
