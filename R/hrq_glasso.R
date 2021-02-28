@@ -1,8 +1,3 @@
-### Group lasso for quantile and huber regression
-
-#dyn.load("solveBeta.so") #Shaobo, I only have this working on my Linux HPC. You might want to comment this out for when you run the code. Or just be okay with getting an error. 
-
-
 
 #####################
 ### main function ###
@@ -100,7 +95,7 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
       r<- y-b.int
       # null devience
       dev0<- sum(rq.loss(r,tau))
-      gamma.max<- 0.8; gamma<- min(gamma.max, max(gamma0, quantile(abs(r), probs = 0.1)))
+      gamma.max<- 4; gamma<- min(gamma.max, max(gamma0, quantile(abs(r), probs = 0.1)))
     } else if(method == "mean"){
       b.int <- coefficients(rlm(y ~ 1, k2=gamma))[1] # gamma stays fixed for huber regression
       r <- y - b.int
@@ -113,7 +108,7 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
     r <- y - beta0[1] - x%*%beta0[-1]
     if(method=="quantile"){
       dev0<- sum(rq.loss(r,tau))
-      gamma.max<- 0.8; gamma<- min(gamma.max, max(gamma0, quantile(abs(r), probs = 0.1)))
+      gamma.max<- 4; gamma<- min(gamma.max, max(gamma0, quantile(abs(r), probs = 0.1)))
     }else if(method == "mean"){
       dev0 <- sum(huber.loss(r,gamma))
     }else{
@@ -313,7 +308,7 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
       beta.all[,j]<- beta0
       r0<- update.r 
       if(method=="quantile"){
-        gamma.max<- 0.8; gamma<- min(gamma.max, max(gamma0, quantile(abs(r0), probs = 0.1)))
+        gamma.max<- 4; gamma<- min(gamma.max, max(gamma0, quantile(abs(r0), probs = 0.1)))
       } 
       
       # group index and number of groups
