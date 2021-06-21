@@ -7,7 +7,7 @@ Authors@R:
   c(person("Shaobo", "Li", email="shaobo.li@ku.edu", role=c("aut", "cre")),
     person("Ben", "Sherwood", email="ben.sherwood@ku.edu", role=c("aut")))
 Maintainer: Shaobo Li <shaobo.li@ku.edu>
-Description: This package provides a program to conduct group variable selection for quantile and robust mean 
+Description: A program that conducts group variable selection for quantile and robust mean 
               regression (Sherwood and Li, 2021). The group lasso penalty (Yuan and Lin, 2006) is used for
               group-wise variable selection. Both of the quantile and mean regression models are based on the Huber loss.
               Specifically, with the tuning parameter in the Huber loss approaching to 0, the quantile check 

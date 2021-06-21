@@ -47,7 +47,7 @@
 #' Sherwood, B., and Li, S. (2021) An Efficient Approach to Feature Selection and Estimation for Quantile Regression with Grouped Variables. \emph{Working paper}.
 #' 
 #' Yang, Y., and Zou, H., (2015) A Fast Unified Algorithm for Solving Group-lasso Penalize Learning Problems, \emph{Statistics and Computing}, 25 1129-1141.
-#' \url{https://doi.org/10.1007/s11222-014-9498-5}.
+#' \doi{10.1007/s11222-014-9498-5}.
 #' 
 #' @export
 #'

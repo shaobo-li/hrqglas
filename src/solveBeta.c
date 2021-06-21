@@ -149,19 +149,19 @@ void neg_gradient_r_test(double* r, double* weights, double* tau, double* gamma,
 }
 
 
-void print_array(int* vec, int* n){
-	int i; 
-	for(i = 0; i < *n; i++){
-		printf("pos val %d %d \n", i, vec[i]);
-	}
-}
+//void print_array(int* vec, int* n){
+	//int i; 
+	//for(i = 0; i < *n; i++){
+		//printf("pos val %d %d \n", i, vec[i]);
+	//}
+//}
 
-void print_dbl_array(double* vec, int n){
-	int i; 
-	for(i = 0; i < n; i++){
-		printf("pos val %d %f \n", i, vec[i]);
-	}
-}
+//void print_dbl_array(double* vec, int n){
+	//int i; 
+	//for(i = 0; i < n; i++){
+		//printf("pos val %d %f \n", i, vec[i]);
+	//}
+//}
 
 void l2norm(double *r, int n, double* norm){
 	int i;
