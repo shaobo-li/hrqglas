@@ -1,8 +1,8 @@
 Package: hrqglas
 Type: Package
-Title: Group variable selection for quantile and robust mean regression
+Title: Group Variable Selection for Quantile and Robust Mean Regression
 Version: 1.0
-Date: 2021-01-19
+Date: 2021-06-19
 Authors@R: 
   c(person("Shaobo", "Li", email="shaobo.li@ku.edu", role=c("aut", "cre")),
     person("Ben", "Sherwood", email="ben.sherwood@ku.edu", role=c("aut")))
