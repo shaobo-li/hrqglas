@@ -146,7 +146,7 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
         lambda.user<- lambda
         lambda<- exp(c(log(lambda.max), log(sort(lambda[lambda<lambda.max], decreasing = TRUE))))
       }else{
-        warning("lambda is too large, all coefficients are shrunk to 0!")
+        #warning("lambda is too large, all coefficients are shrunk to 0!")
         return(list(beta=matrix(c(b.int, rep(0,p)), nrow = p+1, ncol = length(lambda) )))
       }
     }
@@ -200,10 +200,10 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
     n.grp<- rep(0, length(lambda)); n.grp[1]<- 0
     beta.all<- matrix(0, p+1, length(lambda))
     beta.all[,1]<- beta0
-    kkt_seq<- rep(NA, length(lambda)); kkt_seq[1]<- TRUE
-    converge<- rep(0, length(lambda)); converge[1]<- TRUE
+    kkt_seq<- rep(NA, length(lambda)); kkt_seq[1]<- TRUE  # for internal use
+    converge<- rep(0, length(lambda)); converge[1]<- TRUE # for internal use
     iter<- rep(0, length(lambda)); iter[1]<- 1
-    outer_iter_count <- rep(0,length(lambda)); outer_iter_count[1] <- 0
+    outer_iter_count <- rep(0,length(lambda)); outer_iter_count[1] <- 0 # for internal use
     rel_dev<- rep(0, length(lambda)); rel_dev[1]<- 1
     loss<- rep(0, length(lambda)); loss[1]<- dev0/n
     pen.loss<- rep(0, length(lambda)); pen.loss[1]<- dev0/n
@@ -349,9 +349,9 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
      
       output_hide<- list(iter=iter[stop.ind], rel_dev=rel_dev[stop.ind], outer.iter=outer_iter_count[stop.ind], 
                          kkt=kkt_seq[stop.ind], gamma=gamma.seq[stop.ind])
-      output1<- c(output, output_hide)
-      class(output1) <- "hrq_glasso"
-      return(output1)
+      #output1<- c(output, output_hide)
+      class(output) <- "hrq_glasso"
+      return(output)
     }
     
     ####################
