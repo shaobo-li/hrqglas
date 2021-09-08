@@ -218,6 +218,10 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
         active.ind<- which(grad_k.norm>=w.lambda*(2*lambda[j]-lambda[j-1])) 
         n.active.ind<- length(active.ind)
         
+        if(length(active.ind)==ng){
+          next
+        }
+        
         if(length(active.ind)==0){
           inactive.ind<- 1:ng
           outer_iter<- 0
@@ -225,8 +229,8 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
           update.iter<- 0
           update.converge<- NA
           update.r<- r0
-          
-        }else{
+        }
+        else{
           if(length(active.ind)>ng/2) max_iter<- 50
           
           inactive.ind<- (1:ng)[-active.ind]
