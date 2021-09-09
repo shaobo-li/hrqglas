@@ -4,7 +4,8 @@ devtools::unload("rqPen")
 devtools::unload("hrqglas")
 install_github("bssherwood/hrqglas")
 3
-install_github("bssherwood/rqPen")
+install_github("shaobo-li/rqPen")
+#install_github("bssherwood/rqPen")
 3
 library(rqPen)
 library(hrqglas)
