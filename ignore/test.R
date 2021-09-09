@@ -4,7 +4,7 @@ devtools::unload("rqPen")
 devtools::unload("hrqglas")
 install_github("shaobo-li/hrqglas")
 3
-install_github("bssherwood/rqpen")
+install_github("bssherwood/hrqglas")
 3
 library(rqPen)
 library(hrqglas)
@@ -18,13 +18,13 @@ groups <- c(rep(1,4),rep(2,3),rep(3,3),rep(4,3))
 
 #r1 <- rq.pen(x,y)
 lamMax <- rqPen:::getLamMaxGroup(x, y, groups, .5, rep(1,4), 
-                         penalty = "gLASSO", scalex=TRUE)
+                         penalty = "gLASSO", scalex=TRUE,tau.penalty.factor=1)
 eps <- ifelse(nrow(x) < ncol(x), 0.01, 1e-04)
 nlambda <- 100
 lambda <- exp(seq(log(lamMax), log(eps * lamMax), length.out = nlambda))
 
-h0 <- hrq_glasso(x,y,groups,tau=.5)
-h1 <- hrq_glasso(x,y,groups,tau=.5,lambda=lambda)
+h0 <- hrq_glasso(x,y,groups,tau=.5, w.lambda=rep(1,4))#weird cutting off first lambda and also doesn't quite match with these next two
+h1 <- hrq_glasso(x,y,groups,tau=.5,lambda=lambda, w.lambda=rep(1,4))
 r1 <- rq.group.pen(x,y,groups=groups)
 
 
@@ -54,6 +54,8 @@ gamma.max <- 4
 gamma0 <- .2
 weights <- rep(1,n)
 group.index <- groups
+w.lambda <- rep(1,4)
+x <- scale(x)
 
 b.int<- quantile(y, probs = tau)
 r<- y-b.int
@@ -62,8 +64,8 @@ gamma<- min(gamma.max, max(gamma0, quantile(abs(r), probs = 0.1)))
 
 r0 <- r
 apprx <- "huber"
-grad_k<- -hrqglas:::neg.gradient(r0, weights, tau, gamma=gamma, x, n, apprx)
-grad_k.norm<- tapply(grad_k, group.index, hrqglas:::l2norm)
+grad_k2 <- -hrqglas:::neg.gradient(r0, weights, tau, gamma=gamma, x, n, apprx)
+grad_k.norm<- tapply(grad_k2, group.index, hrqglas:::l2norm)
 
 lambda.max<- max(grad_k.norm/w.lambda)
 
