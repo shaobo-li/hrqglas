@@ -137,7 +137,7 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
     lambda<- exp(seq(log(lambda.max), log(lambda.min), length.out = 101))
   }else{
     # user supplied lambda
-    lambda.discard<- FALSE
+    #lambda.discard<- FALSE
     if(lambda.max> max(lambda)){
       lambda<- exp(c(log(lambda.max), log(sort(lambda, decreasing = TRUE))))
     }else{
