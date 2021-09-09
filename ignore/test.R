@@ -2,9 +2,9 @@ rm(list=ls(all=TRUE))
 library(devtools)
 devtools::unload("rqPen")
 devtools::unload("hrqglas")
-install_github("shaobo-li/hrqglas")
-3
 install_github("bssherwood/hrqglas")
+3
+install_github("bssherwood/rqPen")
 3
 library(rqPen)
 library(hrqglas)
