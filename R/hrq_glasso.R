@@ -377,7 +377,7 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
                          kkt=c(rep(kkt_seq[1], length.diff), kkt_seq[-1]), gamma=c(rep(gamma.seq[1], length.diff), gamma.seq[-1]))
       
       class(output) <- "hrq_glasso"
-      warning(paste("first ", length.diff, " lambdas results in pure sparse estimates!", sep = ""))
+      #warning(paste("first ", length.diff, " lambdas results in pure sparse estimates!", sep = ""))
       return(output)
       
     }
