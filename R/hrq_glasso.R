@@ -63,7 +63,7 @@
 #' 
 hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.lambda=NULL, gamma=0.2, max_iter=200, apprx="huber", 
                       lambda.discard=TRUE, method="quantile", scalex=TRUE, epsilon=1e-4, beta0=NULL){
-  print(paste("tau value is"),tau)
+  print(paste("tau value is",tau))
   
   if(scalex){
     x <- scale(x)
@@ -129,29 +129,30 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
   # l2norm of gradient for each group
   grad_k<- -neg.gradient(r0, weights, tau, gamma=gamma, x, n, apprx)
   grad_k.norm<- tapply(grad_k, group.index, l2norm)
-  
-  lambda.max<- max(grad_k.norm/w.lambda)
+  validSpots <- which(w.lambda!=0)
+  lambda.max<- max((grad_k.norm/w.lambda)[validSpots])
   lambda.flag<- 0
   if(is.null(lambda)){
     lambda.min<- ifelse(n>p, lambda.max*0.001, lambda.max*0.01)
     #lambda<- seq(lambda.max, lambda.min, length.out = 100)
     lambda<- exp(seq(log(lambda.max), log(lambda.min), length.out = 101))
-  }else{
-    # user supplied lambda
-    #lambda.discard<- FALSE
-    if(lambda.max> max(lambda)){
-      lambda<- exp(c(log(lambda.max), log(sort(lambda, decreasing = TRUE))))
-    }else{
-      if(length(lambda)>1 & min(lambda)<lambda.max){
-        lambda.flag<- 1
-        lambda.user<- lambda
-        lambda<- exp(c(log(lambda.max), log(sort(lambda[lambda<lambda.max], decreasing = TRUE))))
-      }else{
-        #warning("lambda is too large, all coefficients are shrunk to 0!")
-        return(list(beta=matrix(c(b.int, rep(0,p)), nrow = p+1, ncol = length(lambda) )))
-      }
-    }
   }
+  #  else{
+  #   # user supplied lambda
+  #   #lambda.discard<- FALSE
+  #   if(lambda.max> max(lambda)){
+  #     lambda<- exp(c(log(lambda.max), log(sort(lambda, decreasing = TRUE))))
+  #   }else{
+  #     if(length(lambda)>1 & min(lambda)<lambda.max){
+  #       lambda.flag<- 1
+  #       lambda.user<- lambda
+  #       lambda<- exp(c(log(lambda.max), log(sort(lambda[lambda<lambda.max], decreasing = TRUE))))
+  #     }else{
+  #       #warning("lambda is too large, all coefficients are shrunk to 0!")
+  #       return(list(beta=matrix(c(b.int, rep(0,p)), nrow = p+1, ncol = length(lambda) )))
+  #     }
+  #   }
+  # }
   
   ## QM condition in Yang and Zou, Lemma 1 (2) -- PD matrix H
   H<- 2*t(x)%*%diag(weights)%*%x/(n*gamma)	
@@ -211,7 +212,7 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
     gamma.seq<- rep(0, length(lambda)); gamma.seq[1]<- gamma
     active.ind<- NULL
     for(j in 2:length(lambda)){ #
-      print("working on lambda", lambda[j])
+      print(paste("working on lambda", lambda[j], "index",j))
       if(length(active.ind)<ng){
         ## use strong rule to determine active group at (i+1) (pre-screening)
         grad_k<- -neg.gradient(r0, weights, tau, gamma=gamma, x, n, apprx)
