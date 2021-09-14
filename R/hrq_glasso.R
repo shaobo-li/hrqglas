@@ -14,6 +14,7 @@
 #' @importFrom Matrix Matrix
 #' @importFrom stats sd quantile coefficients
 #' @importFrom MASS rlm 
+#' @importFrom quantreg rq
 #' @useDynLib hrqglas solve_beta
 #' 
 #' @param x Design matrix (in matrix format)
