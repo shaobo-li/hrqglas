@@ -63,6 +63,7 @@
 #' 
 hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.lambda=NULL, gamma=0.2, max_iter=200, apprx="huber", 
                       lambda.discard=TRUE, method="quantile", scalex=TRUE, epsilon=1e-4, beta0=NULL){
+  print(paste("tau value is"),tau)
   
   if(scalex){
     x <- scale(x)
@@ -210,7 +211,7 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
     gamma.seq<- rep(0, length(lambda)); gamma.seq[1]<- gamma
     active.ind<- NULL
     for(j in 2:length(lambda)){ #
-      
+      print("working on lambda", lambda[j])
       if(length(active.ind)<ng){
         ## use strong rule to determine active group at (i+1) (pre-screening)
         grad_k<- -neg.gradient(r0, weights, tau, gamma=gamma, x, n, apprx)
