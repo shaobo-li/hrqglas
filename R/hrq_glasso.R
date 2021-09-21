@@ -14,6 +14,7 @@
 #' @importFrom Matrix Matrix
 #' @importFrom stats sd quantile coefficients
 #' @importFrom MASS rlm 
+#' @importFrom quantreg rq
 #' @useDynLib hrqglas solve_beta
 #' 
 #' @param x Design matrix (in matrix format)
@@ -63,6 +64,7 @@
 #' 
 hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.lambda=NULL, gamma=0.2, max_iter=200, apprx="huber", 
                       lambda.discard=TRUE, method="quantile", scalex=TRUE, epsilon=1e-4, beta0=NULL){
+  #print(paste("tau value is",tau))
   
   if(scalex){
     x <- scale(x)
@@ -88,22 +90,44 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
 
   # initial value
   gamma0<- gamma
+  penGroup <- which(w.lambda!=0)
+  npenVars <- which(!(group.index %in% penGroup))
+  
   if(is.null(beta0)){
+    beta0 <- rep(0,p+1)
     if(method=="quantile"){
-      # intercept 
-      b.int<- quantile(y, probs = tau)
-      r<- y-b.int
+      if(length(npenVars)==0){
+        # intercept 
+        b.int<- quantile(y, probs = tau)
+        r<- y-b.int
+        beta0[1] <- b.int
+      } else{
+        q1 <- rq(y~x[,npenVars],tau=tau)
+        r <- resid(q1)
+        beta0[1] <- coefficients(q1)[1]
+        beta0[npenVars+1] <- coefficients(q1)[-1]
+      }
       # null devience
       dev0<- sum(rq.loss(r,tau))
       gamma.max<- 4; gamma<- min(gamma.max, max(gamma0, quantile(abs(r), probs = 0.1)))
     } else if(method == "mean"){
-      b.int <- coefficients(rlm(y ~ 1, k2=gamma))[1] # gamma stays fixed for huber regression
-      r <- y - b.int
+      if(length(npenVars)==0){
+        # intercept 
+        b.int <- coefficients(rlm(y ~ 1, k2=gamma))[1] # gamma stays fixed for huber regression
+        r <- y - b.int
+        beta0[1] <- b.int
+      } else{
+        h1 <- rlm(y~x[,npenVars])
+        r <- resid(h1)
+        beta0[1] <- coefficients(q1)[1]
+        beta0[npenVars+1] <- coefficients(q1)[-1]
+      }
+      
       dev0 <- sum(huber.loss(r,gamma))
     } else{
       stop("method must be 'quantile' or 'mean'. ")
     }
-    beta0<- c(b.int, rep(0,p)) 
+    #beta0<- c(b.int, rep(0,p)) 
   } else{
     r <- y - beta0[1] - x%*%beta0[-1]
     if(method=="quantile"){
@@ -128,29 +152,29 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
   # l2norm of gradient for each group
   grad_k<- -neg.gradient(r0, weights, tau, gamma=gamma, x, n, apprx)
   grad_k.norm<- tapply(grad_k, group.index, l2norm)
-  
-  lambda.max<- max(grad_k.norm/w.lambda)
-  lambda.flag<- 0
+  lambda.max<- max((grad_k.norm/w.lambda)[penGroup])
+  #lambda.flag<- 0
   if(is.null(lambda)){
     lambda.min<- ifelse(n>p, lambda.max*0.001, lambda.max*0.01)
     #lambda<- seq(lambda.max, lambda.min, length.out = 100)
     lambda<- exp(seq(log(lambda.max), log(lambda.min), length.out = 101))
-  }else{
-    # user supplied lambda
-    #lambda.discard<- FALSE
-    if(lambda.max> max(lambda)){
-      lambda<- exp(c(log(lambda.max), log(sort(lambda, decreasing = TRUE))))
-    }else{
-      if(length(lambda)>1 & min(lambda)<lambda.max){
-        lambda.flag<- 1
-        lambda.user<- lambda
-        lambda<- exp(c(log(lambda.max), log(sort(lambda[lambda<lambda.max], decreasing = TRUE))))
-      }else{
-        #warning("lambda is too large, all coefficients are shrunk to 0!")
-        return(list(beta=matrix(c(b.int, rep(0,p)), nrow = p+1, ncol = length(lambda) )))
-      }
-    }
   }
+  #  else{
+  #   # user supplied lambda
+  #   #lambda.discard<- FALSE
+  #   if(lambda.max> max(lambda)){
+  #     lambda<- exp(c(log(lambda.max), log(sort(lambda, decreasing = TRUE))))
+  #   }else{
+  #     if(length(lambda)>1 & min(lambda)<lambda.max){
+  #       lambda.flag<- 1
+  #       lambda.user<- lambda
+  #       lambda<- exp(c(log(lambda.max), log(sort(lambda[lambda<lambda.max], decreasing = TRUE))))
+  #     }else{
+  #       #warning("lambda is too large, all coefficients are shrunk to 0!")
+  #       return(list(beta=matrix(c(b.int, rep(0,p)), nrow = p+1, ncol = length(lambda) )))
+  #     }
+  #   }
+  # }
   
   ## QM condition in Yang and Zou, Lemma 1 (2) -- PD matrix H
   H<- 2*t(x)%*%diag(weights)%*%x/(n*gamma)	
@@ -163,38 +187,38 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
   }
   
   ### for loop over lambda's
-  if(length(lambda)==2){
-    lambda<- lambda[2]
-    # update beta and residuals
-    update <- .C("solve_beta", as.double(y), as.double(cbind(1,x)), as.double(tau), as.double(gamma), 
-                 as.double(weights), as.double(lambda), as.double(w.lambda), 
-                 as.double(eigen.sub.H), as.double(beta0), as.integer(max_iter), as.double(epsilon), as.integer(apprx=="huber"), 
-                 as.integer(n), as.integer(p), as.integer(ng), as.integer(nng), as.integer(0), as.double(r0), as.integer(0))
-    beta0<- update[[9]]
-    iter_num <- update[[19]]
-    converge_status <- update[[17]]==1
-    update.r <- update[[18]]
-    
-    if(scalex){
-      beta0 <- transform_coefs(beta0, mu_x, sigma_x)
-    }
-    beta0[beta_order] <- beta0
-    
-    if(method=="quantile"){
-      dev1<- sum(weights*rq.loss(update.r, tau))
-    } else if( method == "mean"){
-      dev1<- sum(weights*huber.loss(update.r,gamma))	
-    }
-    
-    pen.loss<- dev1/n+lambda*sum(eigen.sub.H*sapply(1:ng, function(xx) l2norm(beta0[-1][group.index==xx])))
-    group.index.out<- unique(group.index[beta0[-1]!=0])
-    output<- list(beta=beta0, lambda=lambda, null.dev=dev0, pen.loss=pen.loss, loss=dev1/n, tau=tau, 
-                  apprx=apprx, n.grp=length(group.index.out), index.grp=group.index.out, x=x, y=y)
-    output.hide<- list(converge=update$converge, iter=update$iter, rel_dev=dev1/dev0)
-    class(output)<- "hrq_glasso"
-    return(output)
-    
-  }else{
+  # if(length(lambda)==2){
+  #   lambda<- lambda[2]
+  #   # update beta and residuals
+  #   update <- .C("solve_beta", as.double(y), as.double(cbind(1,x)), as.double(tau), as.double(gamma), 
+  #                as.double(weights), as.double(lambda), as.double(w.lambda), 
+  #                as.double(eigen.sub.H), as.double(beta0), as.integer(max_iter), as.double(epsilon), as.integer(apprx=="huber"), 
+  #                as.integer(n), as.integer(p), as.integer(ng), as.integer(nng), as.integer(0), as.double(r0), as.integer(0))
+  #   beta0<- update[[9]]
+  #   iter_num <- update[[19]]
+  #   converge_status <- update[[17]]==1
+  #   update.r <- update[[18]]
+  #   
+  #   if(scalex){
+  #     beta0 <- transform_coefs(beta0, mu_x, sigma_x)
+  #   }
+  #   beta0[beta_order] <- beta0
+  #   
+  #   if(method=="quantile"){
+  #     dev1<- sum(weights*rq.loss(update.r, tau))
+  #   } else if( method == "mean"){
+  #     dev1<- sum(weights*huber.loss(update.r,gamma))	
+  #   }
+  #   
+  #   pen.loss<- dev1/n+lambda*sum(eigen.sub.H*sapply(1:ng, function(xx) l2norm(beta0[-1][group.index==xx])))
+  #   group.index.out<- unique(group.index[beta0[-1]!=0])
+  #   output<- list(beta=beta0, lambda=lambda, null.dev=dev0, pen.loss=pen.loss, loss=dev1/n, tau=tau, 
+  #                 apprx=apprx, n.grp=length(group.index.out), index.grp=group.index.out, x=x, y=y)
+  #   output.hide<- list(converge=update$converge, iter=update$iter, rel_dev=dev1/dev0)
+  #   class(output)<- "hrq_glasso"
+  #   return(output)
+  #   
+  # }else{
     
     group.index.out<- matrix(0, ng, length(lambda))
     n.grp<- rep(0, length(lambda)); n.grp[1]<- 0
@@ -209,13 +233,18 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
     pen.loss<- rep(0, length(lambda)); pen.loss[1]<- dev0/n
     gamma.seq<- rep(0, length(lambda)); gamma.seq[1]<- gamma
     active.ind<- NULL
-    for(j in 2:length(lambda)){ #
-      
+    for(j in 1:length(lambda)){ #
+      #print(paste("working on lambda", lambda[j], "index",j))
       if(length(active.ind)<ng){
         ## use strong rule to determine active group at (i+1) (pre-screening)
         grad_k<- -neg.gradient(r0, weights, tau, gamma=gamma, x, n, apprx)
         grad_k.norm<- tapply(grad_k, group.index, l2norm)
-        active.ind<- which(grad_k.norm>=w.lambda*(2*lambda[j]-lambda[j-1])) 
+        if(j == 1){
+          active.ind<- which(grad_k.norm>=w.lambda*2*lambda[1])
+        } else{
+          active.ind<- which(grad_k.norm>=w.lambda*(2*lambda[j]-lambda[j-1]))
+        }
+        
         n.active.ind<- length(active.ind)
         
         if(length(active.ind)==ng){
@@ -329,8 +358,10 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
       loss[j]<- dev1/n
       pen.loss[j]<- dev1/n+lambda[j]*sum(eigen.sub.H*sapply(1:ng, function(xx) l2norm(beta0[-1][group.index==xx])))
       rel_dev[j]<- dev1/dev0
-      rel_dev_change<- rel_dev[j]-rel_dev[j-1]
-      if(abs(rel_dev_change)<1e-3 & j>70 & lambda.discard) break
+      if(j > 1){
+        rel_dev_change<- rel_dev[j]-rel_dev[j-1]
+        if(abs(rel_dev_change)<1e-3 & j>70 & lambda.discard) break
+      }
 
     } # end of for loop of lambda
     
@@ -338,8 +369,8 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
     stop.ind<- which(rel_dev!=0)
     if(length(stop.ind)==0) stop.ind<- 1:length(lambda)
     
-    if(lambda.flag==0){
-      stop.ind<- stop.ind[-1]
+    #if(lambda.flag==0){
+      #stop.ind<- stop.ind[-1]
       if(scalex){
         beta.final<- apply(beta.all[,stop.ind], 2, transform_coefs, mu_x,sigma_x)
       } else{
@@ -356,33 +387,33 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
       #output1<- c(output, output_hide)
       class(output) <- "hrq_glasso"
       return(output)
-    }
+   # }
     
-    ####################
-    if(lambda.flag==1){
-      length.diff<- length(lambda.user)-length(lambda)+1
-      beta.all<- cbind(matrix(beta.all[,1], nrow = p+1, ncol = length.diff),beta.all[,-1])
-      if(scalex){
-        beta.final<- apply(beta.all, 2, transform_coefs, mu_x,sigma_x)
-      } else{
-        beta.final <- beta.all
-      }
-      rownames(beta.final)<- c("Intercept", paste("V", 1:p, sep = ""))
-      
-      output<- list(beta=Matrix(beta.final), lambda=lambda.user, null.dev=dev0, pen.loss=c(rep(pen.loss[1], length.diff), pen.loss[-1]), 
-                    loss=c(rep(loss[1], length.diff), loss[-1]), n.grp=c(rep(n.grp[1], length.diff), n.grp[-1]), 
-                    index.grp=Matrix(cbind(matrix(group.index.out[,1], nrow = nrow(group.index.out), ncol = length.diff),group.index.out[,-1])), 
-                    tau=tau, apprx=apprx, group.index=group.index, method=method, x=x, y=y)
-      output_hide<- list(iter=c(rep(iter[1], length.diff), iter), rel_dev=c(rep(rel_dev[1], length.diff), rel_dev), outer.iter=outer_iter_count[stop.ind], 
-                         kkt=c(rep(kkt_seq[1], length.diff), kkt_seq[-1]), gamma=c(rep(gamma.seq[1], length.diff), gamma.seq[-1]))
-      
-      class(output) <- "hrq_glasso"
-      warning(paste("first ", length.diff, " lambdas results in pure sparse estimates!", sep = ""))
-      return(output)
-      
-    }
+    # ####################
+    # if(lambda.flag==1){
+    #   length.diff<- length(lambda.user)-length(lambda)+1
+    #   beta.all<- cbind(matrix(beta.all[,1], nrow = p+1, ncol = length.diff),beta.all[,-1])
+    #   if(scalex){
+    #     beta.final<- apply(beta.all, 2, transform_coefs, mu_x,sigma_x)
+    #   } else{
+    #     beta.final <- beta.all
+    #   }
+    #   rownames(beta.final)<- c("Intercept", paste("V", 1:p, sep = ""))
+    #   
+    #   output<- list(beta=Matrix(beta.final), lambda=lambda.user, null.dev=dev0, pen.loss=c(rep(pen.loss[1], length.diff), pen.loss[-1]), 
+    #                 loss=c(rep(loss[1], length.diff), loss[-1]), n.grp=c(rep(n.grp[1], length.diff), n.grp[-1]), 
+    #                 index.grp=Matrix(cbind(matrix(group.index.out[,1], nrow = nrow(group.index.out), ncol = length.diff),group.index.out[,-1])), 
+    #                 tau=tau, apprx=apprx, group.index=group.index, method=method, x=x, y=y)
+    #   output_hide<- list(iter=c(rep(iter[1], length.diff), iter), rel_dev=c(rep(rel_dev[1], length.diff), rel_dev), outer.iter=outer_iter_count[stop.ind], 
+    #                      kkt=c(rep(kkt_seq[1], length.diff), kkt_seq[-1]), gamma=c(rep(gamma.seq[1], length.diff), gamma.seq[-1]))
+    #   
+    #   class(output) <- "hrq_glasso"
+    #   #warning(paste("first ", length.diff, " lambdas results in pure sparse estimates!", sep = ""))
+    #   return(output)
+    #   
+    # }
     
-  } # end of else condition
+  #} # end of else condition
   
 } # end of function
 ########################################
