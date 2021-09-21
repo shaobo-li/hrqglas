@@ -1,9 +1,24 @@
+library(devtools)
 setwd("C:/Users/b157s966/Dropbox/My PC (BUSN-1XWNDC2)/Documents/RPackage/hrqglas")
 roxygen2::roxygenise()
 load_all()
 setwd("C:/Users/b157s966/Dropbox/My PC (BUSN-1XWNDC2)/Documents/RPackage/rqpen")
 roxygen2::roxygenise()
 load_all()
+
+library(quantreg)
+data(barro)
+y <- barro$y.net
+x <- as.matrix(barro[,-1])
+
+h1 <- hqreg(x,y)
+r1 <- rq.pen(x,y)
+r2 <- rq.group.pen(x,y)
+
+
+
+
+
 rm(list=ls(all=TRUE))
 library(devtools)
 devtools::unload("rqPen")
