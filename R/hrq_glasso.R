@@ -188,7 +188,7 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
     
     pen.loss<- dev1/n+lambda*sum(eigen.sub.H*sapply(1:ng, function(xx) l2norm(beta0[-1][group.index==xx])))
     group.index.out<- unique(group.index[beta0[-1]!=0])
-    output<- list(beta=beta0, lambda=lambda, null.dev=dev0, pen.loss=pen.loss, loss=dev1/n, tau=tau, 
+    output<- list(beta=beta0[beta_order], lambda=lambda, null.dev=dev0, pen.loss=pen.loss, loss=dev1/n, tau=tau, 
                   apprx=apprx, n.grp=length(group.index.out), index.grp=group.index.out, x=x, y=y)
     output.hide<- list(converge=update$converge, iter=update$iter, rel_dev=dev1/dev0)
     class(output)<- "hrq_glasso"
@@ -347,7 +347,7 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
       }
       rownames(beta.final)<- c("Intercept", paste("V", 1:p, sep = ""))
       
-      output<- list(beta=Matrix(beta.final), lambda=lambda[stop.ind], null.dev=dev0, pen.loss=pen.loss[stop.ind], 
+      output<- list(beta=Matrix(beta.final[beta_order,]), lambda=lambda[stop.ind], null.dev=dev0, pen.loss=pen.loss[stop.ind], 
                     loss=loss[stop.ind], n.grp=n.grp[stop.ind], index.grp=Matrix(group.index.out[,stop.ind]),
                     tau=tau, apprx=apprx, group.index=group.index, method=method, x=x, y=y) 
      
@@ -369,7 +369,7 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
       }
       rownames(beta.final)<- c("Intercept", paste("V", 1:p, sep = ""))
       
-      output<- list(beta=Matrix(beta.final), lambda=lambda.user, null.dev=dev0, pen.loss=c(rep(pen.loss[1], length.diff), pen.loss[-1]), 
+      output<- list(beta=Matrix(beta.final[beta_order,]), lambda=lambda.user, null.dev=dev0, pen.loss=c(rep(pen.loss[1], length.diff), pen.loss[-1]), 
                     loss=c(rep(loss[1], length.diff), loss[-1]), n.grp=c(rep(n.grp[1], length.diff), n.grp[-1]), 
                     index.grp=Matrix(cbind(matrix(group.index.out[,1], nrow = nrow(group.index.out), ncol = length.diff),group.index.out[,-1])), 
                     tau=tau, apprx=apprx, group.index=group.index, method=method, x=x, y=y)
