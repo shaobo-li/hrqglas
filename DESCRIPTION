@@ -16,7 +16,7 @@ Description: A program that conducts group variable selection for quantile and r
               has also been shown to be statistical consistent.
 URL: GitHub: https://github.com/shaobo-li/hrqglas
 License: GPL (>= 2)
-Imports: Rcpp (>= 1.0.4), stats, MASS, Matrix, graphics
+Imports: Rcpp (>= 1.0.4), stats, MASS, Matrix, graphics, quantreg
 LinkingTo: Rcpp
 RoxygenNote: 7.1.1
 Encoding: UTF-8
