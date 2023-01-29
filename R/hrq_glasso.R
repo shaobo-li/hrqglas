@@ -221,8 +221,23 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
         active.ind<- which(grad_k.norm>=w.lambda*(2*lambda[j]-lambda[j-1])) 
         n.active.ind<- length(active.ind)
         
-        if(length(active.ind)==ng){
-          next
+        if(length(active.ind)==ng){ # first time strong rule suggests length(active.ind)=ng
+          # next
+          outer_iter<- 0
+          kkt_met<- NA
+          max_iter<- 50
+          
+          # update beta and residuals
+          update <- .C("solve_beta", as.double(y), as.double(cbind(1,x)), as.double(tau), as.double(gamma), 
+                       as.double(weights), as.double(lambda[j]), as.double(w.lambda), 
+                       as.double(eigen.sub.H), as.double(beta0), as.integer(max_iter), as.double(epsilon), as.integer(apprx=="huber"), 
+                       as.integer(n), as.integer(p), as.integer(ng), as.integer(nng), as.integer(0), as.double(r0), as.integer(0))
+          beta.update <- update[[9]]
+          update.r <- update[[18]]
+          update.converge <- update[[17]]
+          update.iter <- update[[19]]
+          
+          beta0<- beta.update
         }
         
         if(length(active.ind)==0){
