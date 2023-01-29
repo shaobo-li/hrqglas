@@ -64,11 +64,7 @@
 hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.lambda=NULL, gamma=0.2, max_iter=200, apprx="huber", 
                       lambda.discard=TRUE, method="quantile", scalex=TRUE, epsilon=1e-4, beta0=NULL){
   
-  if(scalex){
-    x <- scale(x)
-    mu_x <- attributes(x)$`scaled:center`
-    sigma_x <- attributes(x)$`scaled:scale`
-  }
+  
   
   np<- dim(x)
   n<- np[1]; p<- np[2]
@@ -117,12 +113,18 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
   }
   r0<- r
   
-  ## required by C code ##
+  ## reorder the group for x, put the same group together, e.g. (1,1,2,2,2,3,3)
+  ## ##required by C code## ##
   group_order <- order(group.index)
   group.index <- sort(group.index)
   x <- x[,group_order]
   beta_order <- c(1,group_order+1)
   
+  if(scalex){
+    x <- scale(x)
+    mu_x <- attributes(x)$`scaled:center`
+    sigma_x <- attributes(x)$`scaled:scale`
+  }
   
   ## get sequence of lambda if not supplied
   # l2norm of gradient for each group
@@ -178,7 +180,7 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
     if(scalex){
       beta0 <- transform_coefs(beta0, mu_x, sigma_x)
     }
-    beta0[beta_order] <- beta0
+    #beta0[beta_order] <- beta0
     
     if(method=="quantile"){
       dev1<- sum(weights*rq.loss(update.r, tau))
@@ -188,7 +190,8 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
     
     pen.loss<- dev1/n+lambda*sum(eigen.sub.H*sapply(1:ng, function(xx) l2norm(beta0[-1][group.index==xx])))
     group.index.out<- unique(group.index[beta0[-1]!=0])
-    output<- list(beta=beta0, lambda=lambda, null.dev=dev0, pen.loss=pen.loss, loss=dev1/n, tau=tau, 
+    beta00 <- beta0; beta00[beta_order] <- beta0 ## reverse beta to the original order of X
+    output<- list(beta=beta00, lambda=lambda, null.dev=dev0, pen.loss=pen.loss, loss=dev1/n, tau=tau, 
                   apprx=apprx, n.grp=length(group.index.out), index.grp=group.index.out, x=x, y=y)
     output.hide<- list(converge=update$converge, iter=update$iter, rel_dev=dev1/dev0)
     class(output)<- "hrq_glasso"
@@ -307,7 +310,7 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
       iter[j]<- update.iter
       gamma.seq[j]<- gamma
       
-      beta0[beta_order] <- beta0  # required for C
+      #beta0[beta_order] <- beta0  # required for C
       
       beta.all[,j]<- beta0
       r0<- update.r 
@@ -345,9 +348,11 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
       } else{
         beta.final <- beta.all[,stop.ind]
       }
-      rownames(beta.final)<- c("Intercept", paste("V", 1:p, sep = ""))
       
-      output<- list(beta=Matrix(beta.final), lambda=lambda[stop.ind], null.dev=dev0, pen.loss=pen.loss[stop.ind], 
+      beta.final00 <- beta.final; beta.final00[beta_order,] <- beta.final ## reverse beta to the original order of X
+      rownames(beta.final00)<- c("Intercept", paste("V", 1:p, sep = ""))
+      
+      output<- list(beta=Matrix(beta.final00), lambda=lambda[stop.ind], null.dev=dev0, pen.loss=pen.loss[stop.ind], 
                     loss=loss[stop.ind], n.grp=n.grp[stop.ind], index.grp=Matrix(group.index.out[,stop.ind]),
                     tau=tau, apprx=apprx, group.index=group.index, method=method, x=x, y=y) 
      
@@ -367,9 +372,11 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
       } else{
         beta.final <- beta.all
       }
-      rownames(beta.final)<- c("Intercept", paste("V", 1:p, sep = ""))
       
-      output<- list(beta=Matrix(beta.final), lambda=lambda.user, null.dev=dev0, pen.loss=c(rep(pen.loss[1], length.diff), pen.loss[-1]), 
+      beta.final00 <- beta.final; beta.final00[beta_order,] <- beta.final ## reverse beta to the original order of X
+      rownames(beta.final00)<- c("Intercept", paste("V", 1:p, sep = ""))
+      
+      output<- list(beta=Matrix(beta.final00), lambda=lambda.user, null.dev=dev0, pen.loss=c(rep(pen.loss[1], length.diff), pen.loss[-1]), 
                     loss=c(rep(loss[1], length.diff), loss[-1]), n.grp=c(rep(n.grp[1], length.diff), n.grp[-1]), 
                     index.grp=Matrix(cbind(matrix(group.index.out[,1], nrow = nrow(group.index.out), ncol = length.diff),group.index.out[,-1])), 
                     tau=tau, apprx=apprx, group.index=group.index, method=method, x=x, y=y)
