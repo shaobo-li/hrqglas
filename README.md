@@ -38,7 +38,7 @@ plot(fit.cv1)
 
 ## References
 
-Sherwood, B. and Li, S. (2021) An Efficient Approach to Feature Selection and Estimation for Quantile Regression with Grouped Variables, *Working paper*.
+Sherwood, B., & Li, S. (2022). Quantile regression feature selection and estimation with grouped variables using Huber approximation. *Statistics and Computing*, 32(5), 75. [https://doi.org/10.1007/s11222-022-10135-w](https://doi.org/10.1007/s11222-022-10135-w)
  
 Yang, Y. and Zou, H., (2015) A Fast Unified Algorithm for Solving Group-lasso Penalize Learning Problems, *Statistics and Computing*, 25 1129-1141. [https://doi.org/10.1007/s11222-014-9498-5](https://doi.org/10.1007/s11222-014-9498-5).
 
