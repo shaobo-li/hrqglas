@@ -2,11 +2,9 @@
 
 ## Overview
 
-This R package provides a program to conduct group-wise variable selection and estimation for quantile and robust mean regression. The group lasso penalty $p_{\lambda_j}(\beta_j)=\lambda_j\|\beta_j\|_2$, where $j$ is the group index, is used for group-wise variable selection (Yuan and Lin, 2006). For quantile regression, the check loss is approximated by the Huber loss for the median and the tilted version of Huber loss at other quantiles. This approximation overcomes the nondifferentiability at the origin of check loss, which may otherwise cause instable estimation. Statistical consistency has been shown for this approximated quantile regression estimates (Sherwood and Li, 2021). The estimation algorithm follows Yang and Zou (2015), and it is computational efficient and stable. A robust estimation of mean regression is a byproduct of this implementation as Huber loss, with appropriate choices of the tuning parameter, is intrinsically a robust loss function that is insensitive to outliers. 
+This R package provides a program to conduct group-wise variable selection and estimation for quantile and robust mean regression. The group lasso penalty $p_{\lambda_j}(\beta_j)=\lambda_j\|\beta_j\|_2$, where $j$ is the group index, is used for group-wise variable selection (Yuan and Lin, 2006). For quantile regression, the check loss is approximated by the Huber loss for the median and the tilted version of Huber loss at other quantiles. This approximation overcomes the nondifferentiability at the origin of check loss, which may otherwise cause instable estimation. Statistical consistency has been shown for this approximated quantile regression estimates (Sherwood and Li, 2022). The estimation algorithm follows Yang and Zou (2015), and it is computationally efficient and stable. A robust estimation of mean regression is a byproduct of this implementation as Huber loss, with appropriate choices of the tuning parameter, is intrinsically a robust loss function that is insensitive to outliers. 
 
 ## Installation
-
-Currently not available on CRAN. User can install from github with following code.
 
 ``` r
 devtools::install_github("shaobo-li/hrqglas")
