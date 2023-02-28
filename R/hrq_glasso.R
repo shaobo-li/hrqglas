@@ -72,6 +72,10 @@ hrq_glasso<- function(x, y, group.index, tau=0.5, lambda=NULL, weights=NULL, w.l
   if(!(apprx %in% c("huber", "tanh"))){
     stop("must use 'huber' or 'tanh' for apprx")
   }
+  if( sum(apply(x,2,sd)==0) >0 ){
+	stop("one x variable is constant. This can occur when using cross-validation with predictors that have a vast majority of 0s or 1s becuase for one of the training data sets the variable will appear constant.")
+  }
+
   
   if(min(group.index)!=1 | max(group.index)!=length(unique(group.index)) | !is.numeric(group.index)){
     stop("'group.index' must be numeric sequence starting from 1.")
